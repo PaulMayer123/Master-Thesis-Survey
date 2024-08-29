@@ -200,7 +200,7 @@ def grouped_self_test(path_to_audio):
         
 
 # Streamlit App
-st.title("Sound File Rating Survey")
+st.title("Audio Rating Survey")
 # Initialize session state variables
 if 'total_groups' not in st.session_state:
     st.session_state.total_groups = 10  # will be overwritten by the actual number of groups
