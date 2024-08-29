@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import pandas as pd
 import dropbox
+import random
 import requests
 from dropbox.exceptions import AuthError
 
@@ -10,7 +11,7 @@ def play_wav_grouped(sound_files, files_path, group):
     st.write(f"### Group {st.session_state.group_index}: Evaluate all the samples")
 
     # Instructions
-    st.write("After listening to all samples, use the slider below to rate the group as a whole.")
+    st.write("After listening to all samples, rate the group as a whole.")
     st.write("Evaluate how human-like the variance is. Are these all natural readings? And are they variable enough to cover roughly how a human would speak?")
 
     # Display all sound files
@@ -162,7 +163,6 @@ def grouped_self_test(path_to_audio):
         st.session_state.ratings = {"model": [0 for _ in range(len(models))], "rating": [0 for _ in range(len(models))]}
     group_index = st.session_state.group_index
 
-    print(st.session_state)
     if group_index < len(models):
         model_name = models[group_index]
         sound_files = [f for f in os.listdir(os.path.join(path_to_audio, model_name)) if f.endswith('.wav') or f.endswith('.mp3')]
@@ -182,10 +182,13 @@ def grouped_self_test(path_to_audio):
             models = ["model " + str(i) for i in range(len(models))] 
             
             df_names["model"] = models
-            st.table(df_names.reset_index(drop=True))
+            
+            df_names.set_index('model', inplace=True)
+            st.table(df_names)
             
             # Create the dropdown menu using st.selectbox
-            st.selectbox("Choose which Group to jump to:",  ["Results"] + ["model " + str(i) for i in range(len(models))], on_change=jump_to_group, key="selected_option")
+            st.write("Remember to only change the rating if you made a mistake.")
+            st.selectbox("Choose which Group to listen/rate again:",  ["Results"] + ["group " + str(i) for i in range(len(models))], on_change=jump_to_group, key="selected_option")
 
 
             col1, col2 = st.columns(2)
@@ -211,9 +214,15 @@ progress = st.session_state.group_index / st.session_state.total_groups
 st.progress(progress)
 # Check if the version is already stored in session state
 if 'version' not in st.session_state:
-    # Prompt for the version input only if it's not already set
-    version_input = st.text_input("Name", "")
-    st.button("Submit your Name", on_click=update_version, args=(version_input,))
+    # Starting "page"
+    st.write("### Welcome to the Audio Rating Survey!")
+    st.write("Here are the instructions:")    
+    st.write("- You will then listen to groups of audio samples and rate them on a scale of 1 to 5.")
+    st.write("- Rate the group based on how human-like the variance is.")
+    st.write("- Stick to the first reaction and only change the rating if you made a mistake.")
+    # create random string that identifies user
+    version = ''.join(random.choices("abcdefghijklmnopqrstuvwxyz", k=7))
+    st.button("Start Survey", on_click=update_version, args=(version,))
 else:
     # Path to audio files (You can change this to a file uploader in a real deployment)
     path_to_audio = "audios/test/"
